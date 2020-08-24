@@ -16,23 +16,27 @@ resource "aws_iam_user_group_membership" "ci" {
 }
 
 resource "aws_iam_policy" "s3" {
-  name        = "Allow-Put"
+  name        = "AllowPut"
   description = "Allow uploading to release bucket"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "s3:PutObject"
-      ],
-      "Effect": "Allow",
-      "Resource": ["${module.release_bucket.this_s3_bucket_arn}", "${module.release_bucket.this_s3_bucket_arn}:*"]
-    }
-  ]
+  policy      = data.aws_iam_policy_document.s3.json
 }
-EOF
+
+data "aws_iam_policy_document" "s3" {
+  statement {
+    sid = "AllowPut"
+
+    actions = [
+      "s3:ListObjectsV2",
+      "s3:ListBucket",
+      "s3:PutObject",
+      "s3:s3:PutObjectAcl"
+    ]
+
+    resources = [
+      "${module.release_bucket.this_s3_bucket_arn}",
+      "${module.release_bucket.this_s3_bucket_arn}/*"
+    ]
+  }
 }
 
 resource "aws_iam_group_policy_attachment" "s3" {
