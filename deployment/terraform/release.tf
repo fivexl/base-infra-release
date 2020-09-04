@@ -9,6 +9,11 @@ module "release_bucket" {
     enabled = true
   }
 
+  website = {
+    index_document = "index.html"
+    error_document = "error.html"
+  }
+
   server_side_encryption_configuration = {
     rule = {
       apply_server_side_encryption_by_default = {
@@ -22,8 +27,16 @@ module "release_bucket" {
 
 resource "aws_cloudfront_distribution" "s3_distribution" {
   origin {
-    domain_name = module.release_bucket.this_s3_bucket_bucket_regional_domain_name
-    origin_id   = format("S3-%s", module.release_bucket.this_s3_bucket_bucket_regional_domain_name)
+    domain_name = module.release_bucket.this_s3_bucket_website_endpoint
+    origin_id   = format("S3-Website-%s", module.release_bucket.this_s3_bucket_website_endpoint)
+    custom_origin_config {
+      http_port                = 80
+      https_port               = 443
+      origin_keepalive_timeout = 5
+      origin_protocol_policy   = "http-only"
+      origin_ssl_protocols     = ["TLSv1.2"]
+      origin_read_timeout      = 30
+    }
   }
 
   enabled             = true
@@ -42,7 +55,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = format("S3-%s", module.release_bucket.this_s3_bucket_bucket_regional_domain_name)
+    target_origin_id = format("S3-Website-%s", module.release_bucket.this_s3_bucket_website_endpoint)
 
     forwarded_values {
       cookies {
