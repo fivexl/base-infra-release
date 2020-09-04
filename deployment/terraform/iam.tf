@@ -29,7 +29,7 @@ data "aws_iam_policy_document" "s3" {
       "s3:ListObjectsV2",
       "s3:ListBucket",
       "s3:PutObject",
-      "s3:s3:PutObjectAcl"
+      "s3:PutObjectAcl"
     ]
 
     resources = [
