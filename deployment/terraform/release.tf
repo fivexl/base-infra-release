@@ -167,3 +167,15 @@ resource "aws_cloudwatch_metric_alarm" "cloudfront_releases_requests" {
     DistributionId = aws_cloudfront_distribution.s3_distribution.id
   }
 }
+
+# Trigger for Lambda Release Index Generator
+# WARNING: Don't remove filter_suffix. Without suffix it will be invocation loop
+# TODO: Many runs for one deployment. Because we post many .zip files to S3
+resource "aws_s3_bucket_notification" "trigger_index_generator" {
+  bucket = module.release_bucket.this_s3_bucket_id
+  lambda_function {
+    lambda_function_arn = module.lambda_release_index_generator.this_lambda_function_arn
+    events              = ["s3:ObjectCreated:Post", "s3:ObjectCreated:Put"]
+    filter_suffix       = ".zip"
+  }
+}
