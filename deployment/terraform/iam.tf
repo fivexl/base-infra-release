@@ -60,7 +60,8 @@ data "aws_iam_policy_document" "lambda_release_index_generator_s3" {
   statement {
     sid = "AllowPutIndex"
     actions = [
-      "s3:PutObject"
+      "s3:PutObject",
+      "s3:PutObjectAcl"
     ]
     resources = [
       "${module.release_bucket.this_s3_bucket_arn}/index.html",
