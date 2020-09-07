@@ -34,3 +34,6 @@ override.tf.json
 
 # Python venv
 **/venv/
+
+# TF vars files
+**.tfvars
