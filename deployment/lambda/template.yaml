@@ -1,0 +1,11 @@
+Resources:
+  releaseindexgenerator:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: main.lambda_handler
+      CodeUri: release_index_generator/
+      Runtime: python3.8
+      Timeout: 300
+      MemorySize: 128
+      Environment:
+        Variables:

@@ -37,3 +37,6 @@ override.tf.json
 
 # TF vars files
 **.tfvars
+
+# AWS SAM
+**.aws-sam
