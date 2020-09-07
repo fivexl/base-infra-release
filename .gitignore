@@ -31,3 +31,6 @@ override.tf.json
 
 # Lambda Local Builds
 **/builds/
+
+# Python venv
+**/venv/

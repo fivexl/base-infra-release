@@ -3,8 +3,8 @@ module "lambda_release_index_generator" {
   version                           = "~> 1.22"
   function_name                     = "release_index_generator"
   description                       = "Lambda for generate index.html files for releases.fivexl.io bucket"
-  handler                           = "index.lambda_handler"
-  runtime                           = "nodejs12.x"
+  handler                           = "main.lambda_handler"
+  runtime                           = "python3.8"
   source_path                       = "../lambda/release_index_generator"
   cloudwatch_logs_retention_in_days = 7
   publish                           = true
