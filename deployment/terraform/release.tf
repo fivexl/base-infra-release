@@ -14,6 +14,15 @@ module "release_bucket" {
     error_document = "error.html"
   }
 
+  cors_rule = [
+    {
+      allowed_methods = ["GET"]
+      allowed_origins = ["https://releases.fivexl.io"]
+      allowed_headers = ["*"]
+      max_age_seconds = 3000
+    }
+  ]
+
   server_side_encryption_configuration = {
     rule = {
       apply_server_side_encryption_by_default = {
@@ -53,14 +62,15 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   aliases = ["releases.fivexl.io"]
 
   default_cache_behavior {
-    allowed_methods  = ["GET", "HEAD"]
-    cached_methods   = ["GET", "HEAD"]
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD", "OPTIONS"]
     target_origin_id = format("S3-Website-%s", module.release_bucket.this_s3_bucket_website_endpoint)
 
     forwarded_values {
       cookies {
         forward = "none"
       }
+      headers      = ["Origin"]
       query_string = false
     }
 
