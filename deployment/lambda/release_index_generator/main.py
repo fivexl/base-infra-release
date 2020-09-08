@@ -25,8 +25,7 @@ def format_files(files):
     return {"applications": apps, "files": my_list}
 
 
-def create_index(bucket_name, info):
-    element_main_li = ""
+def create_index_for_app(bucket_name, info):
     for app, versions in info['applications'].items():
         element_app_li = "<li>\n  <a href=\"/" + "\"> ... </a>\n</li>"
         for ver in versions:
@@ -47,7 +46,17 @@ def create_index(bucket_name, info):
             Body=template.render(elements=element_app_li),
             ContentType='text/html'
         )
-        element_main_li = element_main_li + "\n<li>\n  <a href=\"/" + app + "/" + "\">" + app + "</a>\n</li>"
+    return "OK"
+
+
+def update_main_index(bucket_name):
+    element_main_li = ""
+    all_apps = set()
+    for file in s3_resource.Bucket(bucket_name).objects.all():
+        if not file.key.endswith("index.html"):
+            all_apps.add(file.key.split("/")[0])
+    for all_app in all_apps:
+        element_main_li = element_main_li + "\n<li>\n  <a href=\"/" + all_app + "/" + "\">" + all_app + "</a>\n</li>"
     index_html_s3 = s3_resource.Object(bucket_name, "index.html")
     index_html_s3.put(
         ACL='public-read',
@@ -75,9 +84,10 @@ def lambda_handler(event, context):
                     files.append(key[:-1])
                 else:
                     files.append(key)
-    files_info = format_files(sorted(files))
-    status = create_index(bucket, files_info)
+    formatted_files = format_files(sorted(files))
+    status_index_for_app = create_index_for_app(bucket, formatted_files)
+    status_index_main  = update_main_index(bucket)
     return {
         'statusCode': 200,
-        'body': status
+        'body': {'status_index_for_app': status_index_for_app, 'status_index_main': status_index_main}
     }
