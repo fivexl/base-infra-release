@@ -53,7 +53,7 @@ def update_main_index(bucket_name):
     element_main_li = ""
     all_apps = set()
     for file in s3_resource.Bucket(bucket_name).objects.all():
-        if not file.key.endswith("index.html"):
+        if not file.key.endswith("index.html") and not "." in file.key:
             all_apps.add(file.key.split("/")[0])
     for all_app in all_apps:
         element_main_li = element_main_li + "\n<li>\n  <a href=\"/" + all_app + "/" + "\">" + all_app + "</a>\n</li>"
