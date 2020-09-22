@@ -1,0 +1,72 @@
+name: 'Apply Infra Updates'
+
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: "5 0 * * 0"
+
+jobs:
+  terraform:
+    name: 'Terraform'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: deployment/terraform/
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
+      AWS_DEFAULT_REGION: "eu-central-1"
+
+    # Checkout the repository to the GitHub Actions runner
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 0.13.3
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      # Checks that all Terraform configuration files adhere to a canonical format
+      - name: Terraform Format
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+
+      # Validate terraform configuration before plan and apply
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      # Check Terraform security basisc with tfsec https://github.com/liamg/tfsec
+      - name: Terraform security scan
+        id: tfsec
+        uses: triat/terraform-security-scan@v2.0.0
+        with:
+          tfsec_actions_comment: false
+
+      # Generates an execution plan for Terraform
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -var='em_list=${{ secrets.EM_LIST }}' -no-color -out plan.tfplan
+
+      # Apply an execution plan with Terraform
+      - name: Terraform Apply
+        id: apply
+        run: |
+          ls -la plan.tfplan
+          terraform apply -auto-approve plan.tfplan
