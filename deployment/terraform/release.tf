@@ -89,7 +89,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 
   viewer_certificate {
     acm_certificate_arn      = data.aws_acm_certificate.releases.arn
-    minimum_protocol_version = "TLSv1.2_2019"
+    minimum_protocol_version = "TLSv1.2_2019" #tfsec:ignore:AWS021
     ssl_support_method       = "sni-only"
   }
 }

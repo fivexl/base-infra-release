@@ -1,4 +1,3 @@
-variable "email_list" {
-  description = "List of Emails for Alarm Notification"
+variable "em_list" {
   type = list(string)
 }
