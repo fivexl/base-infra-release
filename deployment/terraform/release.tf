@@ -34,7 +34,7 @@ module "release_bucket" {
   restrict_public_buckets = true
 }
 
-resource "aws_cloudfront_distribution" "s3_distribution" {
+resource "aws_cloudfront_distribution" "s3_distribution" { #tfsec:ignore:AWS045
   origin {
     domain_name = module.release_bucket.this_s3_bucket_website_endpoint
     origin_id   = format("S3-Website-%s", module.release_bucket.this_s3_bucket_website_endpoint)
