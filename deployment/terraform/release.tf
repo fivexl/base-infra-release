@@ -1,6 +1,6 @@
 module "release_bucket" {
   source  = "terraform-aws-modules/s3-bucket/aws"
-  version = "1.12.0"
+  version = "1.17.0"
 
   bucket = local.release_bucket_name
   acl    = "private"

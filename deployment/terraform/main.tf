@@ -18,7 +18,7 @@ locals {
 # This is state bucket used above
 module "state_bucket" {
   source  = "terraform-aws-modules/s3-bucket/aws"
-  version = "1.12.0"
+  version = "1.17.0"
 
   bucket = local.state_bucket_name
   acl    = "private"
