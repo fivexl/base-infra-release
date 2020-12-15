@@ -27,6 +27,11 @@ module "state_bucket" {
     enabled = true
   }
 
+  logging = {
+    target_bucket = module.logging_bucket.this_s3_bucket_id
+    target_prefix = local.state_bucket_name
+  }
+
   server_side_encryption_configuration = {
     rule = {
       apply_server_side_encryption_by_default = {

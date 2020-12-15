@@ -9,6 +9,11 @@ module "logging_bucket" {
     enabled = true
   }
 
+  logging = {
+    target_bucket = local.logging_bucket_name
+    target_prefix = local.logging_bucket_name
+  }
+
   server_side_encryption_configuration = {
     rule = {
       apply_server_side_encryption_by_default = {

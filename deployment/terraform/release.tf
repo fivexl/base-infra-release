@@ -14,6 +14,11 @@ module "release_bucket" {
     error_document = "error.html"
   }
 
+  logging = {
+    target_bucket = module.logging_bucket.this_s3_bucket_id
+    target_prefix = local.release_bucket_name
+  }
+
   cors_rule = [
     {
       allowed_methods = ["GET"]
