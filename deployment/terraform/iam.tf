@@ -33,7 +33,7 @@ data "aws_iam_policy_document" "s3" {
     ]
 
     resources = [
-      "${module.release_bucket.this_s3_bucket_arn}",
+      module.release_bucket.this_s3_bucket_arn,
       "${module.release_bucket.this_s3_bucket_arn}/*"
     ]
   }
