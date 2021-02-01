@@ -116,13 +116,17 @@ data "aws_acm_certificate" "releases" {
 # Also we must use us-east-1 region for Cloud Front
 # https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/programming-cloudwatch-metrics.html
 
+data "aws_ssm_parameter" "emails" {
+  name = local.emails_parameter
+}
+
 data "template_file" "aws_cf_sns_cf_releases_stack" {
   template = file("${path.module}/templates/cf_aws_sns_email_stack.json.tpl")
   vars = {
     RESOURCE_NAME = "CFRELEASESALERTS"
     TOPIC_NAME    = "CloudFront_FivexL_Releases_Alerts"
     DISPLAY_NAME  = "FivexL_Releases_Alerts"
-    SNS_SUB_LIST  = join(",", formatlist("{\"Endpoint\": \"%s\",\"Protocol\": \"%s\"}", local.email_address_list, "email"))
+    SNS_SUB_LIST  = join(",", formatlist("{\"Endpoint\": \"%s\",\"Protocol\": \"%s\"}", split(",", data.aws_ssm_parameter.emails.value), "email"))
   }
 }
 

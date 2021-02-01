@@ -161,6 +161,16 @@ data "aws_iam_policy_document" "ci" {
       "*"
     ]
   }
+  statement {
+    sid    = "SSM"
+    actions = [
+      "ssm:DescribeParameter",
+      "ssm:GetParameter"
+    ]
+    resources = [
+      "arn:aws:ssm:eu-central-1:222341826240:parameter${local.emails_parameter}"
+    ]
+  }
 }
 
 resource "aws_iam_policy" "ci" {
@@ -186,7 +196,7 @@ data "aws_iam_policy_document" "s3_state" {
       "s3:GetObject"
     ]
     resources = [
-      "${module.state_bucket.this_s3_bucket_arn}",
+      module.state_bucket.this_s3_bucket_arn,
       "${module.state_bucket.this_s3_bucket_arn}/*"
     ]
   }
@@ -212,7 +222,7 @@ data "aws_iam_policy_document" "s3_logs" {
       "s3:ListBucket"
     ]
     resources = [
-      "${module.logging_bucket.this_s3_bucket_arn}",
+      module.logging_bucket.this_s3_bucket_arn,
       "${module.logging_bucket.this_s3_bucket_arn}/*"
     ]
   }
