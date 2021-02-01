@@ -63,7 +63,7 @@ jobs:
       # Generates an execution plan for Terraform
       - name: Terraform Plan
         id: plan
-        run: terraform plan -var='em_list=${{ secrets.EM_LIST }}' -no-color -out plan.tfplan
+        run: terraform plan -no-color -out plan.tfplan
 
       # Apply an execution plan with Terraform
       - name: Terraform Apply
