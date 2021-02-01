@@ -59,6 +59,7 @@ data "aws_iam_policy_document" "ci" {
       "iam:ListGroupsForUser",
       "iam:GetPolicy",
       "iam:GetPolicyVersion",
+      "iam:ListPolicyVersions",
       "iam:GetRole",
       "iam:ListAccessKeys",
       "iam:ListAttachedGroupPolicies",
