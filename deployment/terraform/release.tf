@@ -118,12 +118,6 @@ resource "aws_cloudformation_stack" "tf_sns_cf_releases_topic" {
   }
 }
 
-data "aws_sns_topic" "cf_releases_alerts" {
-  provider   = aws.us_east_1
-  name       = "CloudFront_FivexL_Releases_Alerts"
-  depends_on = [aws_cloudformation_stack.tf_sns_cf_releases_topic]
-}
-
 resource "aws_cloudwatch_metric_alarm" "cloudfront_releases_bytes_downloaded" {
   provider                  = aws.us_east_1
   alarm_name                = "${aws_cloudfront_distribution.s3_distribution.id}-CF-BytesDownloaded"
