@@ -162,7 +162,7 @@ data "aws_iam_policy_document" "ci" {
     ]
   }
   statement {
-    sid    = "SSM"
+    sid = "SSM"
     actions = [
       "ssm:DescribeParameter",
       "ssm:GetParameter"
