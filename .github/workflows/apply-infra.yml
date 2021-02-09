@@ -7,14 +7,59 @@ on:
   schedule:
     - cron: "5 0 * * 0"
 
+defaults:
+  run:
+    shell: bash
+    working-directory: deployment/terraform/
+
 jobs:
-  terraform:
-    name: 'Terraform'
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-        working-directory: deployment/terraform/
+  tflint:
+    name: TFLint
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: TFLint
+        run: |
+          curl https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+          tflint
+
+  fmt:
+    name: fmt
+    runs-on: ubuntu-20.04
+    container:
+      image: hashicorp/terraform:latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: terraform fmt --recursive -check=true
+
+  validate:
+    name: validate
+    runs-on: ubuntu-20.04
+    container:
+      image: hashicorp/terraform:latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: terraform validate
+        run: |
+          terraform init
+          terraform validate -no-color
+        env:
+          AWS_DEFAULT_REGION: "eu-central-1"
+
+  tfsec:
+    name: TFSec
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: TFSec
+        uses: triat/terraform-security-scan@v2.0.2
+        with:
+          tfsec_actions_comment: false
+
+  apply:
+    name: apply
+    needs: [tflint, fmt, validate, tfsec]
+    runs-on: ubuntu-20.04
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
@@ -28,8 +73,6 @@ jobs:
       # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
-        with:
-          terraform_version: 0.14.6
 
       # 2020-10-12 python 3.9 not yet compatible
       - name: Setup Python
@@ -41,24 +84,6 @@ jobs:
       - name: Terraform Init
         id: init
         run: terraform init
-
-      # Checks that all Terraform configuration files adhere to a canonical format
-      - name: Terraform Format
-        id: fmt
-        run: terraform fmt -check
-        continue-on-error: true
-
-      # Validate terraform configuration before plan and apply
-      - name: Terraform Validate
-        id: validate
-        run: terraform validate -no-color
-
-      # Check Terraform security basisc with tfsec https://github.com/liamg/tfsec
-      - name: Terraform security scan
-        id: tfsec
-        uses: triat/terraform-security-scan@v2.0.2
-        with:
-          tfsec_actions_comment: false
 
       # Generates an execution plan for Terraform
       - name: Terraform Plan
