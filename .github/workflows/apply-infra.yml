@@ -60,6 +60,7 @@ jobs:
   driftctl:
     name: driftctl
     runs-on: ubuntu-20.04
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v2
       - name: driftctl
