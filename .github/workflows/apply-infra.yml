@@ -57,6 +57,22 @@ jobs:
         with:
           tfsec_actions_comment: false
 
+  driftctl:
+    name: driftctl
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: driftctl
+        run: |
+          curl -L https://github.com/cloudskiff/driftctl/releases/latest/download/driftctl_linux_amd64 -o driftctl
+          chmod +x driftctl
+          ./driftctl scan --from tfstate+s3://"$TF_STATE_PATH"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          AWS_DEFAULT_REGION: "eu-central-1"
+          TF_STATE_PATH: ${{ secrets.TF_STATE_PATH }}
+
   apply:
     name: apply
     needs: [tflint, fmt, validate, tfsec]
