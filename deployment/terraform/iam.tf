@@ -56,6 +56,7 @@ data "aws_iam_policy_document" "ci" {
       "cloudformation:*",
       "iam:GetUser",
       "iam:GetGroup",
+      "iam:ListRolePolicies",
       "iam:ListGroupsForUser",
       "iam:GetPolicy",
       "iam:GetPolicyVersion",
