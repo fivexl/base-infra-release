@@ -33,8 +33,8 @@ data "aws_iam_policy_document" "s3" {
     ]
 
     resources = [
-      module.release_bucket.this_s3_bucket_arn,
-      "${module.release_bucket.this_s3_bucket_arn}/*"
+      module.release_bucket.s3_bucket_arn,
+      "${module.release_bucket.s3_bucket_arn}/*"
     ]
   }
 }
@@ -198,8 +198,8 @@ data "aws_iam_policy_document" "s3_state" {
       "s3:GetObject"
     ]
     resources = [
-      module.state_bucket.this_s3_bucket_arn,
-      "${module.state_bucket.this_s3_bucket_arn}/*"
+      module.state_bucket.s3_bucket_arn,
+      "${module.state_bucket.s3_bucket_arn}/*"
     ]
   }
 }
@@ -224,8 +224,8 @@ data "aws_iam_policy_document" "s3_logs" {
       "s3:ListBucket"
     ]
     resources = [
-      module.logging_bucket.this_s3_bucket_arn,
-      "${module.logging_bucket.this_s3_bucket_arn}/*"
+      module.logging_bucket.s3_bucket_arn,
+      "${module.logging_bucket.s3_bucket_arn}/*"
     ]
   }
 }
@@ -250,8 +250,8 @@ data "aws_iam_policy_document" "lambda_release_index_generator_s3" {
       "s3:ListBucket"
     ]
     resources = [
-      module.release_bucket.this_s3_bucket_arn,
-      "${module.release_bucket.this_s3_bucket_arn}/*"
+      module.release_bucket.s3_bucket_arn,
+      "${module.release_bucket.s3_bucket_arn}/*"
     ]
   }
   statement {
@@ -261,8 +261,8 @@ data "aws_iam_policy_document" "lambda_release_index_generator_s3" {
       "s3:PutObjectAcl"
     ]
     resources = [
-      "${module.release_bucket.this_s3_bucket_arn}/index.html",
-      "${module.release_bucket.this_s3_bucket_arn}/*index.html",
+      "${module.release_bucket.s3_bucket_arn}/index.html",
+      "${module.release_bucket.s3_bucket_arn}/*index.html",
     ]
   }
 }

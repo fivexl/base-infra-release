@@ -1,6 +1,6 @@
 module "lambda_release_index_generator" {
   source                            = "terraform-aws-modules/lambda/aws"
-  version                           = "1.36.0"
+  version                           = "2.1.0"
   function_name                     = "release_index_generator"
   description                       = "Lambda for generate index.html files for releases.fivexl.io bucket"
   handler                           = "main.lambda_handler"
@@ -11,7 +11,7 @@ module "lambda_release_index_generator" {
   allowed_triggers = {
     S3 = {
       principal      = "s3.amazonaws.com"
-      source_arn     = module.release_bucket.this_s3_bucket_arn
+      source_arn     = module.release_bucket.s3_bucket_arn
       source_account = data.aws_caller_identity.current.account_id
     }
   }

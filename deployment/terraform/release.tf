@@ -1,6 +1,6 @@
 module "release_bucket" {
   source  = "terraform-aws-modules/s3-bucket/aws"
-  version = "1.17.0"
+  version = "2.2.0"
 
   bucket = local.release_bucket_name
   acl    = "private"
@@ -15,7 +15,7 @@ module "release_bucket" {
   }
 
   logging = {
-    target_bucket = module.logging_bucket.this_s3_bucket_id
+    target_bucket = module.logging_bucket.s3_bucket_id
     target_prefix = local.release_bucket_name
   }
 
@@ -41,8 +41,8 @@ module "release_bucket" {
 
 resource "aws_cloudfront_distribution" "s3_distribution" { #tfsec:ignore:AWS045
   origin {
-    domain_name = module.release_bucket.this_s3_bucket_website_endpoint
-    origin_id   = format("S3-Website-%s", module.release_bucket.this_s3_bucket_website_endpoint)
+    domain_name = module.release_bucket.s3_bucket_website_endpoint
+    origin_id   = format("S3-Website-%s", module.release_bucket.s3_bucket_website_endpoint)
     custom_origin_config {
       http_port                = 80
       https_port               = 443
@@ -60,8 +60,8 @@ resource "aws_cloudfront_distribution" "s3_distribution" { #tfsec:ignore:AWS045
 
   logging_config {
     include_cookies = false
-    bucket          = module.logging_bucket.this_s3_bucket_bucket_domain_name
-    prefix          = format("cloudfront-%s", module.release_bucket.this_s3_bucket_id)
+    bucket          = module.logging_bucket.s3_bucket_bucket_domain_name
+    prefix          = format("cloudfront-%s", module.release_bucket.s3_bucket_id)
   }
 
   aliases = ["releases.fivexl.io"]
@@ -69,7 +69,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" { #tfsec:ignore:AWS045
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD", "OPTIONS"]
-    target_origin_id = format("S3-Website-%s", module.release_bucket.this_s3_bucket_website_endpoint)
+    target_origin_id = format("S3-Website-%s", module.release_bucket.s3_bucket_website_endpoint)
 
     forwarded_values {
       cookies {
@@ -164,9 +164,9 @@ resource "aws_cloudwatch_metric_alarm" "cloudfront_releases_requests" {
 # WARNING: Don't remove filter_suffix. Without suffix it will be invocation loop
 # TODO: Many runs for one deployment. Because we post many .zip files to S3
 resource "aws_s3_bucket_notification" "trigger_index_generator" {
-  bucket = module.release_bucket.this_s3_bucket_id
+  bucket = module.release_bucket.s3_bucket_id
   lambda_function {
-    lambda_function_arn = module.lambda_release_index_generator.this_lambda_function_arn
+    lambda_function_arn = module.lambda_release_index_generator.lambda_function_arn
     events              = ["s3:ObjectCreated:Post", "s3:ObjectCreated:Put"]
     filter_suffix       = ".zip"
   }

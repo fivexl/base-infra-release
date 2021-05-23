@@ -9,7 +9,7 @@ terraform {
 # This is state bucket used above
 module "state_bucket" {
   source  = "terraform-aws-modules/s3-bucket/aws"
-  version = "1.17.0"
+  version = "2.2.0"
 
   bucket = local.state_bucket_name
   acl    = "private"
@@ -19,7 +19,7 @@ module "state_bucket" {
   }
 
   logging = {
-    target_bucket = module.logging_bucket.this_s3_bucket_id
+    target_bucket = module.logging_bucket.s3_bucket_id
     target_prefix = local.state_bucket_name
   }
 
