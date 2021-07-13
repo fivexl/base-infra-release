@@ -1,6 +1,6 @@
 module "logging_bucket" {
   source  = "terraform-aws-modules/s3-bucket/aws"
-  version = "2.2.0"
+  version = "2.6.0"
 
   bucket = local.logging_bucket_name
   acl    = "log-delivery-write"

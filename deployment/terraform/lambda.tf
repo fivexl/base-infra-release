@@ -1,6 +1,6 @@
 module "lambda_release_index_generator" {
   source                            = "terraform-aws-modules/lambda/aws"
-  version                           = "2.1.0"
+  version                           = "2.7.0"
   function_name                     = "release_index_generator"
   description                       = "Lambda for generate index.html files for releases.fivexl.io bucket"
   handler                           = "main.lambda_handler"
