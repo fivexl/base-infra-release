@@ -58,6 +58,8 @@ data "aws_iam_policy_document" "ci" {
       "iam:GetGroup",
       "iam:ListRolePolicies",
       "iam:ListGroupsForUser",
+      "iam:TagPolicy",
+      "iam:UntagPolicy",
       "iam:GetPolicy",
       "iam:GetPolicyVersion",
       "iam:ListPolicyVersions",
