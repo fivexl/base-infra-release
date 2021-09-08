@@ -35,14 +35,14 @@ def create_index_for_app(bucket_name, info):
                     element_ver_li = element_ver_li + "\n<li>\n  <a href=\"/" + file + "\">" + file.rsplit("/", 1)[1] + "</a>\n</li>"
             index_html_s3 = s3_resource.Object(bucket_name, app + "/" + ver + "/" + "index.html")
             index_html_s3.put(
-                ACL='public-read',
+                ACL='private',
                 Body=template.render(elements=element_ver_li),
                 ContentType='text/html'
             )
             element_app_li = element_app_li + "\n<li>\n  <a href=\"/" + app + "/" + ver + "\">" + app + "_" + ver + "</a>\n</li>"
         index_html_s3 = s3_resource.Object(bucket_name, app + "/index.html")
         index_html_s3.put(
-            ACL='public-read',
+            ACL='private',
             Body=template.render(elements=element_app_li),
             ContentType='text/html'
         )
@@ -56,10 +56,10 @@ def update_main_index(bucket_name):
         if not file.key.endswith("index.html") and not "." in file.key:
             all_apps.add(file.key.split("/")[0])
     for all_app in all_apps:
-        element_main_li = element_main_li + "\n<li>\n  <a href=\"/" + all_app + "/" + "\">" + all_app + "</a>\n</li>"
+        element_main_li = element_main_li + "\n<li>\n  <a href=\"/" + all_app + "/index.html" + "\">" + all_app + "</a>\n</li>"
     index_html_s3 = s3_resource.Object(bucket_name, "index.html")
     index_html_s3.put(
-        ACL='public-read',
+        ACL='private',
         Body=template.render(elements=element_main_li),
         ContentType='text/html'
     )
@@ -85,6 +85,7 @@ def lambda_handler(event, context):
                 else:
                     files.append(key)
     formatted_files = format_files(sorted(files))
+    print("formatted_files: ", formatted_files)
     status_index_for_app = create_index_for_app(bucket, formatted_files)
     status_index_main  = update_main_index(bucket)
     return {

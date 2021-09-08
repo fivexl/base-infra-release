@@ -1,6 +1,6 @@
 module "release_bucket" {
   source  = "terraform-aws-modules/s3-bucket/aws"
-  version = "2.6.0"
+  version = "2.9.0"
 
   bucket = local.release_bucket_name
   acl    = "private"
@@ -36,20 +36,48 @@ module "release_bucket" {
     }
   }
 
+  attach_policy                         = true
+  attach_deny_insecure_transport_policy = true
+  policy                                = data.aws_iam_policy_document.release_bucket_policy.json
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
   restrict_public_buckets = true
+
 }
+
+data "aws_iam_policy_document" "release_bucket_policy" {
+  statement {
+    sid = "AllowCloudFrontReadObjects"
+
+    actions = [
+      "s3:GetObject"
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = [aws_cloudfront_origin_access_identity.release.iam_arn]
+    }
+
+    resources = [
+      "arn:aws:s3:::${local.release_bucket_name}/*",
+    ]
+  }
+}
+
+resource "aws_cloudfront_origin_access_identity" "release" {
+  comment = "FivexL Releases CDN"
+}
+
 
 resource "aws_cloudfront_distribution" "s3_distribution" { #tfsec:ignore:AWS045
   origin {
-    domain_name = module.release_bucket.s3_bucket_website_endpoint
+    domain_name = module.release_bucket.s3_bucket_bucket_regional_domain_name
     origin_id   = format("S3-Website-%s", module.release_bucket.s3_bucket_website_endpoint)
-    custom_origin_config {
-      http_port                = 80
-      https_port               = 443
-      origin_keepalive_timeout = 5
-      origin_protocol_policy   = "http-only"
-      origin_ssl_protocols     = ["TLSv1.2"]
-      origin_read_timeout      = 30
+  
+    s3_origin_config {
+      origin_access_identity = aws_cloudfront_origin_access_identity.release.cloudfront_access_identity_path
     }
   }
 
