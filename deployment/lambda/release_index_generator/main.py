@@ -1,94 +1,163 @@
 from botocore.exceptions import ClientError
-from boto3 import client, resource
-from os import path
+from os import path, environ, makedirs
 from jinja2 import Environment, FileSystemLoader
+import boto3
+import time
+import tempfile
+import json
 
-s3_client = client('s3')
-s3_resource = resource('s3')
 env = Environment(loader=FileSystemLoader(path.join(path.dirname(__file__), 'templates'), encoding='utf8'))
 template = env.get_template('index.html')
 
+# For local testing
+WRITE_TO_S3 = True
+DESTINATION = ''
 
-def format_files(files):
-    my_list = files
-    apps = dict()
-    for item in my_list:
-        if "/" not in item:
-            my_list.remove(item)
-    for item in my_list:
-        split = item.split("/")
-        apps.setdefault(split[0], set()).add(split[1])
-    for item in my_list:
-        split = item.split("/")
-        if len(split) <= 2:
-            my_list.remove(item)
-    return {"applications": apps, "files": my_list}
+def create_index_for_app(bucket_name, app):
+    links = dict()
+    objects_to_invalidate = list()
 
+    versions = get_prefixes(bucket_name, f'{app}/')
+    print(f'{app} versions: {versions}')
+    for version in versions:
+        links[f'{app}_{version}'] = f'/{app}/{version}/index.html'
 
-def create_index_for_app(bucket_name, info):
-    for app, versions in info['applications'].items():
-        element_app_li = "<li>\n  <a href=\"/" + "\"> ... </a>\n</li>"
-        for ver in versions:
-            element_ver_li = "<li>\n  <a href=\"/" + app + "/" + "\"> ... </a>\n</li>"
-            for file in info['files']:
-                if (file.find(app) >= 0) and (file.find(ver) >= 0):
-                    element_ver_li = element_ver_li + "\n<li>\n  <a href=\"/" + file + "\">" + file.rsplit("/", 1)[1] + "</a>\n</li>"
-            index_html_s3 = s3_resource.Object(bucket_name, app + "/" + ver + "/" + "index.html")
-            index_html_s3.put(
-                ACL='private',
-                Body=template.render(elements=element_ver_li),
-                ContentType='text/html'
-            )
-            element_app_li = element_app_li + "\n<li>\n  <a href=\"/" + app + "/" + ver + "\">" + app + "_" + ver + "</a>\n</li>"
-        index_html_s3 = s3_resource.Object(bucket_name, app + "/index.html")
-        index_html_s3.put(
-            ACL='private',
-            Body=template.render(elements=element_app_li),
-            ContentType='text/html'
-        )
-    return "OK"
+    print(f'{app} links: {links}')
+    objects_to_invalidate += links.values()
+
+    object_content = template.render(links=links, ref_back='/index.html')
+    write_object(bucket_name, app, object_content)
+
+    for version in versions:
+        file_links = dict()
+        files = get_all_objects(bucket_name, f'{app}/{version}/')
+        for file in files:
+            if file.endswith('index.html'):
+                continue
+            file_links[f'{file}'] = f'/{app}/{version}/{file}'
+        print(f'{app}/{version} links: {file_links}')
+        object_content = template.render(links=file_links, ref_back=f'/{app}/index.html')
+        write_object(bucket_name, f'{app}/{version}', object_content)
+
+    return objects_to_invalidate
 
 
-def update_main_index(bucket_name):
-    element_main_li = ""
-    all_apps = set()
-    for file in s3_resource.Bucket(bucket_name).objects.all():
-        if not file.key.endswith("index.html") and not "." in file.key:
-            all_apps.add(file.key.split("/")[0])
-    for all_app in all_apps:
-        element_main_li = element_main_li + "\n<li>\n  <a href=\"/" + all_app + "/index.html" + "\">" + all_app + "</a>\n</li>"
-    index_html_s3 = s3_resource.Object(bucket_name, "index.html")
-    index_html_s3.put(
-        ACL='private',
-        Body=template.render(elements=element_main_li),
-        ContentType='text/html'
-    )
-    return "OK"
+def update_main_index(bucket_name, apps):
+    links = dict()
+    objects_to_invalidate = []
+    for app in apps:
+        links[app] = f'/{app}/index.html'
+
+    print(f'top level links: {links}')
+    objects_to_invalidate += links.values()
+
+    object_content = template.render(links=links, ref_back='')
+    write_object(bucket_name, '', object_content)
+
+    return objects_to_invalidate
+
+
+def write_object(bucket_name, prefix, object_content):
+    object_path = f'{prefix}/index.html' if prefix else 'index.html'
+    if WRITE_TO_S3:
+        print(f'Writing {bucket_name}/{object_path}')
+        client = boto3.client('s3')
+        client.put_object(
+            Body=object_content,
+            Bucket=bucket_name,
+            Key=object_path,
+            ContentType='text/html')
+    else:
+        if not path.isdir(path.join(DESTINATION, prefix)):
+            makedirs(path.join(DESTINATION, prefix))
+        with open(path.join(DESTINATION, object_path), 'a') as out:
+            print(f'Writing {out.name}')
+            out.write(object_content)
+
+
+def get_prefixes(bucket, prefix=''):
+    client = boto3.client('s3')
+    paginator = client.get_paginator('list_objects')
+    result = paginator.paginate(Bucket=bucket, Delimiter='/', Prefix=prefix)
+    prefixes = list()
+    for common_prefix in result.search('CommonPrefixes'):
+        result = common_prefix.get('Prefix').rstrip('/')
+        if prefix:
+            result = result.split('/')[-1]
+        prefixes.append(result)
+    return prefixes
+
+
+def get_all_objects(bucket_name, prefix=''):
+    s3 = boto3.resource('s3')
+    bucket = s3.Bucket(bucket_name)
+    objects = list()
+    for object_summary in bucket.objects.filter(Prefix=prefix):
+        objects.append(object_summary.key.split('/')[-1])
+    return objects
 
 
 def lambda_handler(event, context):
-    files = []
-    bucket = event['Records'][0]['s3']['bucket']['name']
+    bucket_name = event['Records'][0]['s3']['bucket']['name']
     key = event['Records'][0]['s3']['object']['key']
-    app = key.split("/")[0]
-    app_objs = s3_client.list_objects_v2(
-        Bucket=bucket,
-        Prefix=app
-    )
-    print("S3 objects:", app_objs)
-    if app_objs['KeyCount'] > 1:
-        for obj in app_objs['Contents']:
-            key = obj['Key']
-            if not key.endswith("index.html"):
-                if key.endswith("/"):
-                    files.append(key[:-1])
-                else:
-                    files.append(key)
-    formatted_files = format_files(sorted(files))
-    print("formatted_files: ", formatted_files)
-    status_index_for_app = create_index_for_app(bucket, formatted_files)
-    status_index_main  = update_main_index(bucket)
+    distribution_id = environ.get('DISTRIBUTION_ID', '')
+
+    print(f'Triggered for {bucket_name}/{key}')
+
+    # Do nothting if we get triggered on index.html since we generate them
+    if key.endswith('index.html'):
+        print('Do nothing for index.html')
+        return {'statusCode': 200}
+
+    objects_to_invalidate = ['/index.html']
+
+    apps = get_prefixes(bucket_name)
+    objects_to_invalidate += update_main_index(bucket_name, apps)
+
+    for app in apps:
+        objects_to_invalidate += create_index_for_app(bucket_name, app)
+
+    if distribution_id:
+        print(f'going to invalidate: {objects_to_invalidate}')
+
+        cloudfront = boto3.client('cloudfront')
+        invalidation = cloudfront.create_invalidation(
+            DistributionId=distribution_id,
+            InvalidationBatch={
+                'Paths': {
+                    'Quantity': len(objects_to_invalidate),
+                    'Items': objects_to_invalidate
+                },
+            'CallerReference': str(time.time()).replace(".", "")
+        }
+        )
+        print(f'Created invalidation_id = {invalidation["Invalidation"]["Id"]}')
+
     return {
-        'statusCode': 200,
-        'body': {'status_index_for_app': status_index_for_app, 'status_index_main': status_index_main}
+        'statusCode': 200
     }
+
+
+# For local testing
+if __name__ == '__main__':
+    DESTINATION = tempfile.mkdtemp()
+    WRITE_TO_S3 = False
+    print(f'DESTINATION = {DESTINATION}')
+    print(f'WRITE_TO_S3 = {WRITE_TO_S3}')
+    event = '''
+{
+  "Records": [
+    {
+      "s3": {
+        "bucket": {
+          "name": "release-013803cc9fe0903d4c12dd9f8cb67f668d589098"
+        },
+        "object": {
+          "key": "test%2Fkey"
+        }
+      }
+    }
+  ]
+}
+'''
+    lambda_handler(json.loads(event), None)

@@ -80,10 +80,21 @@
         </a>
     </div>
     <ul>
-        {{ elements }}
+{% if ref_back %}
+        <li>
+            <a href="{{ ref_back }}"> ... </a>
+        </li>
+{% endif %}
+{% for title,ref in links.items() %}
+        <li>
+            <a href="{{ ref }}">{{ title }}</a>
+        </li>
+{% endfor %}
     </ul>
     <footer>
         Made by <a href="https://fivexl.io/">FivexL</a>
     </footer>
     </body>
 </html>
+
+
