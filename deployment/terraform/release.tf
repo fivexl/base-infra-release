@@ -75,7 +75,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" { #tfsec:ignore:AWS045
   origin {
     domain_name = module.release_bucket.s3_bucket_bucket_regional_domain_name
     origin_id   = format("S3-Website-%s", module.release_bucket.s3_bucket_website_endpoint)
-  
+
     s3_origin_config {
       origin_access_identity = aws_cloudfront_origin_access_identity.release.cloudfront_access_identity_path
     }
