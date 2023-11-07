@@ -148,7 +148,9 @@ data "aws_iam_policy_document" "ci" {
       "s3:PutBucketPolicy",
       "s3:GetBucketLocation",
       "s3:GetAccessPointPolicy",
-      "s3:GetObjectVersion"
+      "s3:GetObjectVersion",
+      "s3:GetObject",
+      "s3:PutObject",
     ]
     resources = [
       "*"
