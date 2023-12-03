@@ -81,8 +81,9 @@ data "aws_iam_policy_document" "s3_tf_modules" {
     principals {
       type = "AWS"
       identifiers = [
-        "arn:aws:iam::315518459988:root", # Artem
-        "arn:aws:iam::418656392454:root", # Alexey
+        "arn:aws:iam::315518459988:root", # project-angel 
+        "arn:aws:iam::418656392454:root", # project-meteor
+        "arn:aws:iam::895851960982:root", # project-herring
       ]
     }
     resources = [
