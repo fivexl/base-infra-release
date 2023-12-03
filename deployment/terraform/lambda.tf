@@ -9,6 +9,7 @@ module "lambda_release_index_generator" {
   cloudwatch_logs_retention_in_days = 7
   timeout                           = 60
   publish                           = true
+  build_in_docker = true
   allowed_triggers = {
     S3 = {
       principal      = "s3.amazonaws.com"
