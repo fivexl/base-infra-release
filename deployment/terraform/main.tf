@@ -44,11 +44,11 @@ module "terraform_modules_bucket" {
   source  = "terraform-aws-modules/s3-bucket/aws"
   version = "3.15.1"
 
-  bucket        = local.terraform_modules_bucket_name
+  bucket                   = local.terraform_modules_bucket_name
   control_object_ownership = true
   object_ownership         = "ObjectWriter"
-  attach_policy = true
-  policy        = data.aws_iam_policy_document.s3_tf_modules.json
+  attach_policy            = true
+  policy                   = data.aws_iam_policy_document.s3_tf_modules.json
 
   versioning = {
     enabled = true
@@ -83,7 +83,6 @@ data "aws_iam_policy_document" "s3_tf_modules" {
       identifiers = [
         "arn:aws:iam::315518459988:root", # project-angel 
         "arn:aws:iam::418656392454:root", # project-meteor
-        "arn:aws:iam::895851960982:root", # project-herring
       ]
     }
     resources = [
@@ -91,8 +90,30 @@ data "aws_iam_policy_document" "s3_tf_modules" {
       "arn:aws:s3:::${local.terraform_modules_bucket_name}/*"
     ]
   }
+  statement {
+    sid = "AllowReadFromOrganization"
+    actions = [
+      "s3:GetObject",
+      "s3:ListBucket",
+    ]
+    resources = [
+      "arn:aws:s3:::${local.terraform_modules_bucket_name}",
+      "arn:aws:s3:::${local.terraform_modules_bucket_name}/*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:PrincipalOrgID"
+      values   = ["o-mrgc4e2tu1"] # project-herring
+    }
+    principals {
+      type = "AWS"
+      identifiers = [
+        "*"
+      ]
+    }
+  }
 }
 
 locals {
-  terraform_modules_bucket_name       = format("terraform-modules-%s",  sha1(data.aws_caller_identity.current.account_id))
+  terraform_modules_bucket_name = format("terraform-modules-%s", sha1(data.aws_caller_identity.current.account_id))
 }
