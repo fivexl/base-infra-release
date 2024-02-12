@@ -103,7 +103,10 @@ data "aws_iam_policy_document" "s3_tf_modules" {
     condition {
       test     = "StringEquals"
       variable = "aws:PrincipalOrgID"
-      values   = ["o-mrgc4e2tu1"] # project-herring
+      values   = [
+        "o-mrgc4e2tu1", # project-herring
+        "o-f054in7evx" # test_org_1
+      ]
     }
     principals {
       type = "AWS"
@@ -117,3 +120,6 @@ data "aws_iam_policy_document" "s3_tf_modules" {
 locals {
   terraform_modules_bucket_name = format("terraform-modules-%s", sha1(data.aws_caller_identity.current.account_id))
 }
+
+# target apply of this file
+terraform apply -target=module.terraform_modules_bucket.aws_s3_bucket_policy.this\[0\]
