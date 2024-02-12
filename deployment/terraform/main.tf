@@ -121,5 +121,3 @@ locals {
   terraform_modules_bucket_name = format("terraform-modules-%s", sha1(data.aws_caller_identity.current.account_id))
 }
 
-# target apply of this file
-terraform apply -target=module.terraform_modules_bucket.aws_s3_bucket_policy.this\[0\]
