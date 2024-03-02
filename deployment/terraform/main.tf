@@ -105,7 +105,8 @@ data "aws_iam_policy_document" "s3_tf_modules" {
       variable = "aws:PrincipalOrgID"
       values   = [
         "o-mrgc4e2tu1", # project-herring
-        "o-f054in7evx" # test_org_1
+        "o-f054in7evx", # test_org_1
+        "o-st6dyf2srb" # test_org_2
       ]
     }
     principals {
