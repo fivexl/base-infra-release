@@ -160,7 +160,10 @@ resource "aws_cloudwatch_metric_alarm" "cloudfront_releases_bytes_downloaded" {
   treat_missing_data        = "notBreaching"
   insufficient_data_actions = []
   alarm_actions             = [data.aws_sns_topic.cf_releases_alerts.arn]
-  ok_actions                = []
+  datapoints_to_alarm       = 1
+  ok_actions = [
+      "arn:aws:sns:us-east-1:222341826240:CloudFront_FivexL_Releases_Alerts",
+  ]
   dimensions = {
     Region         = "Global"
     DistributionId = aws_cloudfront_distribution.s3_distribution.id
@@ -181,7 +184,10 @@ resource "aws_cloudwatch_metric_alarm" "cloudfront_releases_requests" {
   treat_missing_data        = "notBreaching"
   insufficient_data_actions = []
   alarm_actions             = [data.aws_sns_topic.cf_releases_alerts.arn]
-  ok_actions                = []
+  datapoints_to_alarm       = 1
+  ok_actions = [
+      "arn:aws:sns:us-east-1:222341826240:CloudFront_FivexL_Releases_Alerts",
+  ]
   dimensions = {
     Region         = "Global"
     DistributionId = aws_cloudfront_distribution.s3_distribution.id
